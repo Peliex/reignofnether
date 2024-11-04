@@ -11,6 +11,8 @@ import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,14 @@ public class BuildingBlockData {
         for(int i = 0; i < blocksNbt.size(); i++) {
             CompoundTag blockNbt = blocksNbt.getCompound(i);
             ListTag blockPosNbt = blockNbt.getList("pos", 3);
+            BlockState blockNbtState = palette.get(blockNbt.getInt("state"));
+
+            // If the block in the palette is water, make sure it is a source block
+            if (blockNbtState.getBlock() == Blocks.WATER) {
+                if(blockNbtState.getValue(BlockStateProperties.LEVEL) > 0) {
+                    continue;
+                }
+            }
 
             blocks.add(new BuildingBlock(
                 new BlockPos(
@@ -45,7 +55,7 @@ public class BuildingBlockData {
                     blockPosNbt.getInt(1),
                     blockPosNbt.getInt(2)
                 ),
-                palette.get(blockNbt.getInt("state"))
+                blockNbtState
             ));
         }
         return blocks;
