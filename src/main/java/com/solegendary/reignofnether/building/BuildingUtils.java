@@ -97,6 +97,7 @@ public class BuildingUtils {
             case VillagerHouse.buildingName -> building = new VillagerHouse(level, pos, rotation, ownerName);
             case Graveyard.buildingName -> building = new Graveyard(level, pos, rotation, ownerName);
             case WheatFarm.buildingName -> building = new WheatFarm(level, pos, rotation, ownerName);
+            case Fountain.buildingName -> building = new Fountain(level, pos, rotation, ownerName);
             case Laboratory.buildingName -> building = new Laboratory(level, pos, rotation, ownerName);
             case Barracks.buildingName -> building = new Barracks(level, pos, rotation, ownerName);
             case PumpkinFarm.buildingName -> building = new PumpkinFarm(level, pos, rotation, ownerName);
