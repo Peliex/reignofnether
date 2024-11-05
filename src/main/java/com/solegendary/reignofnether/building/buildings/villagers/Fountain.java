@@ -16,10 +16,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +33,19 @@ public class Fountain extends Building {
     public final static String buildingName = "Fountain";
     public final static String structureName = "fountain";
     public final static ResourceCost cost = ResourceCost.Building(0,0,100,0);
+    public final static int StructureWidth = 12;
+    public final static int StructureLength = 12;
+    public final static int StructureHeight = 12;
+    public final static AABB AOEBoundingBox =
+        new AABB(
+            -StructureWidth/2, 0, -StructureLength/2,
+            StructureWidth/2, StructureHeight, StructureLength/2
+        );
+    public final static int AOERadius = 12;
 
+    private static final int UNIT_CHECK_TICKS_MAX = 1000;
     private static final int ICE_CHECK_TICKS_MAX = 100;
+    private int ticksToNextUnitCheck = UNIT_CHECK_TICKS_MAX;
     private int ticksToNextIceCheck = ICE_CHECK_TICKS_MAX;
 
     public Fountain(Level level, BlockPos originPos, Rotation rotation, String ownerName) {
@@ -86,11 +100,31 @@ public class Fountain extends Building {
         );
     }
 
+    public void getUnitsInRadius()
+    {
+        AABB worldOffsetBoundingBox =
+            new AABB(AOEBoundingBox.minX + originPos.getX(), AOEBoundingBox.minY + originPos.getY(), AOEBoundingBox.minZ + originPos.getZ(),
+            AOEBoundingBox.maxX + originPos.getX(), AOEBoundingBox.maxY + originPos.getY(), AOEBoundingBox.maxZ + originPos.getZ());
+        List< Entity > units = level.getEntities(null, worldOffsetBoundingBox);
+        for(Entity entity : units)
+        {
+            entity.hurt(DamageSource.MAGIC, 2);
+        }
+    }
+
     @Override
     public void tick(Level tickLevel) {
         super.tick(tickLevel);
         if(!tickLevel.isClientSide()) {
+
+            ticksToNextUnitCheck -= 1;
             ticksToNextIceCheck -= 1;
+
+            if(ticksToNextUnitCheck <= 0) {
+                getUnitsInRadius();
+                ticksToNextUnitCheck = UNIT_CHECK_TICKS_MAX;
+            }
+
             if(ticksToNextIceCheck <= 0) {
                 for (BuildingBlock bb : blocks)
                     if (tickLevel.getBlockState(bb.getBlockPos()).getBlock() == Blocks.ICE)
